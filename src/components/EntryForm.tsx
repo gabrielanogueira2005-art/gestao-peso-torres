@@ -5,16 +5,20 @@ import {
   Layers2, 
   Check, 
   Calendar, 
-  Hash, 
   Scale, 
-  FileText 
+  FileSpreadsheet
 } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 import { TipoTorre } from '../types/production';
 import { parsearValorInput } from '../utils/formatters';
 
-export const EntryForm: React.FC = () => {
+interface EntryFormProps {
+  onOpenExcelModal?: () => void;
+}
+
+export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
   const { adicionarRegistro } = useProduction();
+
 
   const [tipo, setTipo] = useState<TipoTorre>('TORRE_MONTADA');
   const [os, setOs] = useState('');
@@ -77,13 +81,27 @@ export const EntryForm: React.FC = () => {
           </p>
         </div>
 
-        {/* Notificação de Sucesso */}
-        {sucessoMsg && (
-          <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
-            <Check className="w-3.5 h-3.5" />
-            Registro gravado com sucesso!
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {onOpenExcelModal && (
+            <button
+              type="button"
+              onClick={onOpenExcelModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-lg text-xs font-bold transition shadow-sm active:scale-95"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Importar Planilha Excel</span>
+            </button>
+          )}
+
+          {/* Notificação de Sucesso */}
+          {sucessoMsg && (
+            <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+              <Check className="w-3.5 h-3.5" />
+              Registro gravado com sucesso!
+            </div>
+          )}
+        </div>
+
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

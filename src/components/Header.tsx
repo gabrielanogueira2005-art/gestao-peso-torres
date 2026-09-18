@@ -9,23 +9,28 @@ import {
   PlusCircle, 
   TableProperties,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  FileSpreadsheet
 } from 'lucide-react';
+
 import { useProduction } from '../context/ProductionContext';
 import { pdfService } from '../services/pdfService';
 import { formatarMesAno } from '../utils/formatters';
 
 interface HeaderProps {
   onOpenBulkModal: () => void;
+  onOpenExcelModal: () => void;
   getChartCanvas1?: () => HTMLCanvasElement | null;
   getChartCanvas2?: () => HTMLCanvasElement | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   onOpenBulkModal,
+  onOpenExcelModal,
   getChartCanvas1,
   getChartCanvas2
 }) => {
+
   const { 
     registros, 
     registrosFiltrados, 
@@ -158,15 +163,26 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Barra de Ações & Botões de Exportação PDF */}
           <div className="flex flex-wrap items-center gap-2.5">
             
+            {/* NOVO: Importar Planilha Excel */}
+            <button
+              onClick={onOpenExcelModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 hover:border-emerald-500/70 transition-all shadow-sm active:scale-95"
+              title="Importar dados de planilha Excel (.xlsx, .xls, .csv)"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <span>Importar Excel</span>
+            </button>
+
             {/* Lançamento em Lote / Planilha Rápida */}
             <button
               onClick={onOpenBulkModal}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all shadow-sm active:scale-95"
-              title="Inserir vários registros em modo planilha"
+              title="Inserir vários registros em modo planilha manual"
             >
               <TableProperties className="w-4 h-4 text-amber-400" />
               <span>Entrada em Planilha</span>
             </button>
+
 
             {/* BOTÃO 1: Exportar PDF do Mês */}
             <button

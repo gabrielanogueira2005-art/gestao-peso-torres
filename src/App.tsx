@@ -7,10 +7,12 @@ import { FilterBar } from './components/FilterBar';
 import { ProductionTables } from './components/ProductionTables';
 import { ProductionCharts, ProductionChartsRef } from './components/ProductionCharts';
 import { BulkEntryModal } from './components/BulkEntryModal';
+import { ExcelImportModal } from './components/ExcelImportModal';
 import { ShieldCheck, HardHat } from 'lucide-react';
 
 export function AppContent() {
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
   const chartsRef = useRef<ProductionChartsRef>(null);
 
   return (
@@ -18,6 +20,7 @@ export function AppContent() {
       {/* Cabeçalho Industrial com Ações e Botões de PDF */}
       <Header
         onOpenBulkModal={() => setIsBulkModalOpen(true)}
+        onOpenExcelModal={() => setIsExcelModalOpen(true)}
         getChartCanvas1={() => chartsRef.current?.getChart1Canvas() || null}
         getChartCanvas2={() => chartsRef.current?.getChart2Canvas() || null}
       />
@@ -28,7 +31,7 @@ export function AppContent() {
         <MetricCards />
 
         {/* 2. Área de Lançamento Rápido */}
-        <EntryForm />
+        <EntryForm onOpenExcelModal={() => setIsExcelModalOpen(true)} />
 
         {/* 3. Barra de Filtros (Mês/Ano & Busca em Tempo Real) */}
         <FilterBar />
@@ -40,11 +43,18 @@ export function AppContent() {
         <ProductionTables />
       </main>
 
-      {/* Modal de Lançamento Rápido em Planilha */}
+      {/* Modal de Lançamento Rápido em Planilha Manual */}
       <BulkEntryModal
         isOpen={isBulkModalOpen}
         onClose={() => setIsBulkModalOpen(false)}
       />
+
+      {/* Modal de Importação de Arquivos Excel */}
+      <ExcelImportModal
+        isOpen={isExcelModalOpen}
+        onClose={() => setIsExcelModalOpen(false)}
+      />
+
 
       {/* Rodapé Industrial */}
       <footer className="border-t border-slate-900 bg-slate-950/80 py-6 mt-12 text-xs text-slate-400">
