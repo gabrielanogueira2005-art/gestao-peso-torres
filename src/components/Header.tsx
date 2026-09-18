@@ -213,16 +213,17 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 onClick={() => {
-                  if (window.confirm('Tem certeza que deseja recarregar os dados de demonstração originais? Todos os lançamentos manuais não exportados serão redefinidos.')) {
+                  if (window.confirm('Tem certeza que deseja limpar todos os registros?')) {
                     resetarDados();
-                    mostrarSucesso('Dados de demonstração restaurados!');
+                    mostrarSucesso('Todos os registros foram limpos com sucesso!');
                   }
                 }}
                 className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
-                title="Redefinir para dados de teste"
+                title="Limpar todos os registros"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
+
             </div>
 
           </div>

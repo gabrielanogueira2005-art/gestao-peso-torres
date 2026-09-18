@@ -1,5 +1,4 @@
 import { RegistroProducao } from '../types/production';
-import { DADOS_INICIAIS_MOCK } from '../utils/mockData';
 
 const STORAGE_KEY = 'GESTAO_PESO_TORRES_DATA_V1';
 
@@ -8,13 +7,13 @@ export const storageService = {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (!data) {
-        this.salvarRegistros(DADOS_INICIAIS_MOCK);
-        return DADOS_INICIAIS_MOCK;
+        this.salvarRegistros([]);
+        return [];
       }
       return JSON.parse(data);
     } catch (err) {
-      console.error('Erro ao ler localStorage, utilizando dados padrão:', err);
-      return DADOS_INICIAIS_MOCK;
+      console.error('Erro ao ler localStorage, iniciando com lista vazia:', err);
+      return [];
     }
   },
 
@@ -27,8 +26,8 @@ export const storageService = {
   },
 
   resetarParaDadosIniciais(): RegistroProducao[] {
-    this.salvarRegistros(DADOS_INICIAIS_MOCK);
-    return DADOS_INICIAIS_MOCK;
+    this.salvarRegistros([]);
+    return [];
   },
 
   exportarBackupJSON(registros: RegistroProducao[]): void {
@@ -41,3 +40,4 @@ export const storageService = {
     downloadAnchor.remove();
   }
 };
+
