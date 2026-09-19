@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   PlusCircle, 
   Boxes, 
@@ -6,28 +6,71 @@ import {
   Check, 
   Calendar, 
   Scale, 
-  FileSpreadsheet
+  FileSpreadsheet,
+  Upload,
+  Sparkles
 } from 'lucide-react';
 import { useProduction } from '../context/ProductionContext';
 import { TipoTorre } from '../types/production';
-import { parsearValorInput } from '../utils/formatters';
+import { parsearValorInput, obterMesAnoAtual } from '../utils/formatters';
+import { excelService } from '../services/excelService';
 
 interface EntryFormProps {
   onOpenExcelModal?: () => void;
 }
 
 export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
-  const { adicionarRegistro } = useProduction();
-
+  const { adicionarRegistro, adicionarRegistrosEmLote } = useProduction();
+  const directFileInputRef = useRef<HTMLInputElement>(null);
 
   const [tipo, setTipo] = useState<TipoTorre>('TORRE_MONTADA');
   const [os, setOs] = useState('');
   const [so, setSo] = useState('');
   const [ofNum, setOfNum] = useState('');
   const [peso, setPeso] = useState('');
-  const [dataRegistro, setDataRegistro] = useState(() => new Date().toISOString().slice(0, 10));
+  // Mês e ano selecionados (ex: 'YYYY-MM')
+  const [mesAnoRegistro, setMesAnoRegistro] = useState(() => obterMesAnoAtual());
   const [observacoes, setObservacoes] = useState('');
-  const [sucessoMsg, setSucessoMsg] = useState(false);
+  const [sucessoMsg, setSucessoMsg] = useState<string | null>(null);
+  const [carregandoExcel, setCarregandoExcel] = useState(false);
+
+  // Upload direto de Excel (.xlsx, .xls, .csv) inserindo diretamente no estado
+  const handleDirectExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setCarregandoExcel(true);
+      const dataPadrao = `${mesAnoRegistro}-01`;
+      const resultado = await excelService.processarArquivoExcel(file, tipo, dataPadrao);
+      
+      const linhasValidas = resultado.filter(l => l.valido);
+
+      if (linhasValidas.length === 0) {
+        alert('Nenhum registro válido com OS, OF e PESO foi encontrado no arquivo.');
+        return;
+      }
+
+      const novos = linhasValidas.map(l => ({
+        tipo: l.tipo,
+        os: l.os,
+        so: l.so,
+        of: l.of,
+        peso: l.peso,
+        data_registro: l.data_registro,
+        observacoes: l.observacoes || '',
+      }));
+
+      adicionarRegistrosEmLote(novos);
+      setSucessoMsg(`${linhasValidas.length} registros importados com sucesso do Excel!`);
+      setTimeout(() => setSucessoMsg(null), 3500);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao processar o arquivo Excel.');
+    } finally {
+      setCarregandoExcel(false);
+      if (directFileInputRef.current) directFileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,19 +90,22 @@ export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
       return;
     }
 
+    // Define a data como o primeiro dia do mês selecionado: AAAA-MM-01
+    const dataPrimeiroDia = `${mesAnoRegistro}-01`;
+
     adicionarRegistro({
       tipo,
       os: os.trim().toUpperCase(),
       so: so.trim().toUpperCase() || `SO-${os.replace(/\D/g, '')}`,
       of: ofNum.trim().toUpperCase(),
       peso: pesoNumerico,
-      data_registro: dataRegistro,
+      data_registro: dataPrimeiroDia,
       observacoes: observacoes.trim(),
     });
 
     // Feedback e Reset dos campos principais
-    setSucessoMsg(true);
-    setTimeout(() => setSucessoMsg(false), 2500);
+    setSucessoMsg('Registro gravado com sucesso!');
+    setTimeout(() => setSucessoMsg(null), 2500);
 
     setOs('');
     setSo('');
@@ -67,6 +113,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
     setPeso('');
     setObservacoes('');
   };
+
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg mb-6 relative overflow-hidden">
@@ -81,15 +128,35 @@ export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Upload Direto de Excel (.xlsx, .xls, .csv) */}
+          <input
+            type="file"
+            ref={directFileInputRef}
+            accept=".xlsx,.xls,.csv"
+            onChange={handleDirectExcelUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            disabled={carregandoExcel}
+            onClick={() => directFileInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-emerald-950/30 active:scale-95 disabled:opacity-50"
+            title="Importar e salvar registros de arquivo Excel automaticamente"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>{carregandoExcel ? 'Importando Planilha...' : 'Upload Excel (.xlsx, .csv)'}</span>
+          </button>
+
           {onOpenExcelModal && (
             <button
               type="button"
               onClick={onOpenExcelModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-lg text-xs font-bold transition shadow-sm active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition shadow-sm active:scale-95"
+              title="Abrir pré-visualização detalhada da planilha"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Importar Planilha Excel</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Pré-visualizar Planilha</span>
             </button>
           )}
 
@@ -97,7 +164,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
           {sucessoMsg && (
             <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
               <Check className="w-3.5 h-3.5" />
-              Registro gravado com sucesso!
+              {sucessoMsg}
             </div>
           )}
         </div>
@@ -204,22 +271,23 @@ export const EntryForm: React.FC<EntryFormProps> = ({ onOpenExcelModal }) => {
             />
           </div>
 
-          {/* DATA */}
+          {/* DATA (MÊS E ANO COM type="month") */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1 flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5 text-blue-400" />
-              <span>Data de Registro *</span>
+              <span>Mês de Registro *</span>
             </label>
             <input
-              type="date"
+              type="month"
               required
-              value={dataRegistro}
-              onChange={(e) => setDataRegistro(e.target.value)}
+              value={mesAnoRegistro}
+              onChange={(e) => setMesAnoRegistro(e.target.value)}
               className="w-full px-3 py-2 bg-slate-800/90 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
         </div>
+
 
         {/* Linha de Observações & Botão Gravar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
