@@ -41,9 +41,36 @@ export const obterMesAnoAtual = (): string => {
 };
 
 export const parsearValorInput = (valor: string | number): number => {
-  if (typeof valor === 'number') return valor;
+  if (typeof valor === 'number') {
+    return isNaN(valor) ? 0 : valor;
+  }
   if (!valor) return 0;
-  const limpo = valor.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '');
-  const num = parseFloat(limpo);
+
+  let str = String(valor).trim();
+  if (!str) return 0;
+
+  // Se houver vírgula e ponto:
+  // Exemplo: '1.950,435' -> remove ponto de milhar e troca vírgula por ponto -> '1950.435'
+  // Exemplo: '1,950.435' -> remove vírgula de milhar -> '1950.435'
+  if (str.includes(',') && str.includes('.')) {
+    const ultimoPonto = str.lastIndexOf('.');
+    const ultimaVirgula = str.lastIndexOf(',');
+    if (ultimaVirgula > ultimoPonto) {
+      // Padrão brasileiro: 1.250,50
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      // Padrão americano: 1,250.50
+      str = str.replace(/,/g, '');
+    }
+  } else if (str.includes(',')) {
+    // Caso venha apenas com vírgula (ex: '97,1844' ou '1950,435') -> substitui vírgula por ponto
+    str = str.replace(',', '.');
+  }
+
+  // Remove quaisquer outros caracteres não numéricos exceto dígito e ponto
+  str = str.replace(/[^0-9.-]/g, '');
+
+  const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
 };
+

@@ -60,15 +60,17 @@ export const excelService = {
             const osVal = getCol('os', 'ordem de servico', 'ordem de serviço', 'ordem servico');
             const soVal = getCol('so', 'sales order', 'ordem de venda', 'pedido');
             const ofVal = getCol('of', 'ordem de fabricacao', 'ordem de fabricação', 'ordem fabricacao');
-            const pesoVal = getCol('peso', 'peso (kg)', 'peso kg', 'peso_kg', 'peso liquido', 'peso bruto', 'weight');
+            const pesoRaw = getCol('peso', 'peso (kg)', 'peso kg', 'peso_kg', 'peso liquido', 'peso bruto', 'weight');
             const dataVal = getCol('data', 'data_registro', 'data registro', 'date');
             const obsVal = getCol('obs', 'observacao', 'observação', 'observacoes', 'observações', 'notas');
             const tipoVal = getCol('tipo', 'tipo de torre', 'estrutura', 'tipo torre');
 
-            const pesoNum = parsearValorInput(pesoVal);
+            // Conversão explícita de peso com suporte robusto ao formato brasileiro (ex: '97,1844' -> 97.1844, '1950,435' -> 1950.435)
+            const pesoNum = parsearValorInput(pesoRaw);
 
             // Determina tipo
             let tipoFinal: TipoTorre = tipoPadrao;
+
             const tipoLower = tipoVal.toLowerCase();
             if (tipoLower.includes('separad') || tipoLower.includes('separar')) {
               tipoFinal = 'TORRE_SEPARADA';
